@@ -49,7 +49,7 @@ public:
     { return (0 >= _size) ? -1 : search(e, 0, _size); }
 
     Rank search(T const &e, Rank lo, Rank hi) const; //有序向量区间查找
-    // 可写访问接口
+    // TODO：为什么有两个 可写访问接口，经过测试发现调用的都是第一个🤔
     T &operator[](Rank r); //重载下标操作符，可以类似于数组形式引用各元素
     const T &operator[](Rank r) const; //仅限于做右值的重载版本
     Vector<T> &operator=(Vector<T> const &); //重载赋值操作符，以便直接克隆向量
@@ -73,7 +73,8 @@ template<typename T>
 void Vector<T>::copyFrom(const T *A, Rank lo, Rank hi) {
     //预留一倍的空间
     //这是为了让装填因子不致于超过1，也不至于接近0
-    //TODO:可是为什么要预留一倍空间，而不是0.618倍，3倍等等捏,P35
+    //可是为什么要预留一倍空间，而不是0.618倍，3倍等等捏
+    // P35,习惯使然吧，这样转移的时间消耗大概是log2
     _capacity = (hi - lo) >> 1;
     _elem = new T[_capacity];
     //注意是左开右闭
@@ -88,7 +89,7 @@ Vector<T> &Vector<T>::operator=(const Vector<T> &other) {
      * 本来是这样写的，但是clang-tidy提示
      * Clang-Tidy: 'if' statement is unnecessary; deleting null pointer has no effect
      */
-    delete [] _elem;
+    delete[] _elem;
     copyFrom(other, 0, other.size());
     return *this;
 }
@@ -96,23 +97,45 @@ Vector<T> &Vector<T>::operator=(const Vector<T> &other) {
 template<typename T>
 void Vector<T>::expand() {
     //判断一次防止恶意扩充，在其他函数调用expand()时能少写个if
-    if(_size<_capacity) return;
+    if (_size < _capacity) return;
     //TODO:这句话不知道有什么用,可能是有时容量小于默认容量？
-    if(_capacity<DEFAULT_CAPACITY) _capacity = DEFAULT_CAPACITY;
-    T * _old_elem = _elem;
-    _elem = new T[_capacity>>1];
-    for(int i = 0;i<_size;++i){
+    if (_capacity < DEFAULT_CAPACITY) _capacity = DEFAULT_CAPACITY;
+    T *_old_elem = _elem;
+    //本来以为自己对左右移已经够熟悉了，没想到还是会用错
+    //还是直接用乘除更清晰
+    _elem = new T[_capacity <<= 1];
+    for (int i = 0; i < _size; ++i) {
         _elem[i] = _old_elem[i];
     }
-    delete [] _old_elem;
+    delete[] _old_elem;
 }
 
 template<typename T>
 void Vector<T>::shrink() {
     //TODO:这句话还是不知道是什么意思
-    if(_capacity<DEFAULT_CAPACITY<<1) return ;
-//    if(_size<<2 >_capacity) return ;
-    if(_size>_capacity>>2) return ;
+    if (_capacity < DEFAULT_CAPACITY << 1) return;
+    //书上是 if(_size<<2 > _capacity) 感觉不如下面的清楚
+    if (_size > _capacity >> 2) return;
+    T *_old_elem = _elem;
+    _elem = new T[_capacity >>= 1];
+    for (int i = 0; i < _size; ++i) _elem[i] = _old_elem[i];
+    delete[] _old_elem;
+}
+
+template<typename T>
+const T &Vector<T>::operator[](Rank r) const {
+    //if(r<0||r>_size) throw
+    return _elem[r];
+}
+
+template<typename T>
+T &Vector<T>::operator[](Rank r) {
+    return _elem[r];
+}
+
+template<typename T>
+void Vector<T>::unsort(Rank lo, Rank hi) {
+    //假设rand()会产生理想的随机数
 }
 
 //Vector
