@@ -85,6 +85,13 @@ void Vector<T>::copyFrom(const T *A, Rank lo, Rank hi) {
 template<typename T>
 Vector<T> &Vector<T>::operator=(const Vector<T> &other) {
     /*
+     * 同样是clang-tidy提示，这样是为了防止自我赋值，太好用辣趴
+     * https://clang.llvm.org/extra/clang-tidy/checks/bugprone-unhandled-self-assignment.html
+     * 具体原因和解决办法参考上述链接
+     *
+     */
+    if (this == &other) return *this;
+    /*
      * if(_elem) delete [] _elem;
      * 本来是这样写的，但是clang-tidy提示
      * Clang-Tidy: 'if' statement is unnecessary; deleting null pointer has no effect
@@ -136,6 +143,93 @@ T &Vector<T>::operator[](Rank r) {
 template<typename T>
 void Vector<T>::unsort(Rank lo, Rank hi) {
     //假设rand()会产生理想的随机数
+    srand(time(nullptr));
+    T *V = _elem + lo;
+    for (Rank i = hi - lo; i > 0; --i) {
+        std::swap(V[i - 1], V[rand() % i]);
+    }
+    /*
+     * 感觉不如
+     * for(int i = lo;i<hi;++i)
+     *     swap(_elem[i],_elem[rand()%(hi-lo)+lo]);
+     * 清楚
+     */
+}
+
+template<typename T>
+Rank Vector<T>::find(const T &e, Rank lo, Rank hi) const {
+    //如果有多个匹配值，返回其中秩最大的，如果未找到，返回lo-1
+    while (lo < hi-- && _elem[hi] != e);
+    return hi;
+    /*
+     * 这样也不错，返回第一个找到的
+     * while (++lo < hi && _elem[lo] != e);
+     * return lo;
+     */
+}
+
+template<typename T>
+Rank Vector<T>::insert(Rank r, const T &e) {
+    expand(); //检查是否需要扩容
+    for (int i = _size; i > r; --i) _elem[i] = _elem[i - 1];
+    _elem[r] = e;
+    ++_size;
+    return r;
+}
+
+template<typename T>
+int Vector<T>::remove(Rank lo, Rank hi) {
+    //这段代码写的很好
+    if (hi == lo) return 0;
+    while (hi < _size) _elem[lo++] = _elem[hi++];
+    _size = lo;
+    shrink();
+    return hi - lo;
+}
+
+template<typename T>
+T Vector<T>::remove(Rank r) {
+    T *t = _elem[r];
+    remove(r, r + 1);
+    return t;
+}
+
+template<typename T>
+Rank Vector<T>::deduplicate() {
+    //高效删除无序向量中的重复元素
+    int _old_size = _size; //记录原规模
+    Rank i = 1;
+    while (i < _size) {
+        //find()查找失败返回的是lo-1，此时lo == 0; 查找失败函数返回值是-1
+        if (find(_elem[i], 0, i) < 0) ++i;
+        else remove(i);
+    }
+    return _old_size - _size;
+    /*
+     * 去重算法的时间消耗主要在find()和remove()
+     * 我觉得改成从后向前去重时间效率能进一步提高
+     * 改成从后向前后find()的消耗不变，但是remove的消耗会大大减少 (应该吧，
+     * TODO: 我不会证明 😭
+     * int _old_size = _size;
+     * Rank i = _size-1;
+     * while(i >= 0){
+     *     if(find(_elem[i],0,i) < 0) ++i;
+     *     else remove(i)
+     * }
+     * return _old_size - _size;
+     */
+}
+
+//TODO: 暂时看不懂
+template<typename T>
+void Vector<T>::traverse(void (*visit)(T &)) {
+    for (int i = 0; i < _size; ++i) visit(_elem[i]);
+}
+
+template<typename T>
+template<typename VST>
+void Vector<T>::traverse(VST &visit) {
+    for (int i = 0; i < _size; ++i) visit(_elem[i]);
 }
 
 //Vector
