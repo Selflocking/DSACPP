@@ -67,6 +67,7 @@ public:
     void traverse(void (* )(T &)); //遍历（使用函数指针，只读或局部性修改）
     template<typename VST>
     void traverse(VST &); //遍历（使用函数对象，可全局性修改）
+    int disordered() const; //返回向量中相邻但逆序的对数总数
 };
 
 template<typename T>
@@ -199,6 +200,7 @@ Rank Vector<T>::deduplicate() {
     //高效删除无序向量中的重复元素
     int _old_size = _size; //记录原规模
     Rank i = 1;
+    //如果要用for循环应该这样：for(int i = 0;i<_size;)
     while (i < _size) {
         //find()查找失败返回的是lo-1，此时lo == 0; 查找失败函数返回值是-1
         if (find(_elem[i], 0, i) < 0) ++i;
@@ -220,17 +222,58 @@ Rank Vector<T>::deduplicate() {
      */
 }
 
-//TODO: 暂时看不懂
+//要求传进一个函数指针，这个函数指针会对传进来的量做某种操作
 template<typename T>
 void Vector<T>::traverse(void (*visit)(T &)) {
     for (int i = 0; i < _size; ++i) visit(_elem[i]);
 }
 
+//传进来的是一个类，这个类重载了()运算符，因此可以像函数一样往里传参和执行操作
 template<typename T>
 template<typename VST>
 void Vector<T>::traverse(VST &visit) {
     for (int i = 0; i < _size; ++i) visit(_elem[i]);
 }
+
+template<typename T>
+int Vector<T>::disordered() const {
+    int n = 0;
+    for (int i = 1; i < _size; ++i) {
+        if (_elem[i - 1] > _elem[i]) ++n;
+    }
+    return n;
+}
+
+template<typename T>
+Rank Vector<T>::uniquify() {
+    /*
+     * int i = 1;
+     * while (i < _size) {
+     *     _elem[i - 1] == _elem[i] ? remove(i) : ++i;
+     * }
+     * 这样的算法最坏复杂度和无序去重时一样，没有充分用到有序
+     */
+    Rank i = 0, j = 0;
+    while (++j < _size) {
+        if (_elem[i] != _elem[j]) _elem[++i] = _elem[j];
+    }
+    //跳出while后 j==_size, i是从0开始的，所以要++i
+    _size = ++i;
+    shrink();
+    return j - i;
+}
+
+template<typename T>
+Rank Vector<T>::search(const T &e, Rank lo, Rank hi) const {
+//    return (rand() % 2) ? binSearch(_elem, e, lo, hi) : fibSearch(_elem, e, lo, hi);
+    while (lo < hi) {
+        Rank mi = lo + (hi - lo) / 2;
+        if (e < _elem[mi]) hi = mi;
+        else lo = mi + 1;
+    }
+    return lo - 1;
+}
+
 
 //Vector
 #endif //DSACPP_VECTOR_H
