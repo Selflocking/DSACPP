@@ -268,10 +268,14 @@ Rank Vector<T>::search(const T &e, Rank lo, Rank hi) const {
 //    return (rand() % 2) ? binSearch(_elem, e, lo, hi) : fibSearch(_elem, e, lo, hi);
     while (lo < hi) {
         Rank mi = lo + (hi - lo) / 2;
+        //这种算法看似跳过了mi其实没有，因为整个
         if (e < _elem[mi]) hi = mi;
         else lo = mi + 1;
     }
-    return lo - 1;
+    //修改了一下，匹配成功返回下标，不成功返回-1
+    --lo;
+    if (lo == hi - 1 && _elem[hi - 1] != e) lo = -1;
+    return lo;
 }
 
 
