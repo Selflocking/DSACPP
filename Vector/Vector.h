@@ -17,8 +17,7 @@ protected:
     void copyFrom(T const *A, Rank lo, Rank hi); //复制数组区间A[lo, hi)
     void expand(); //空间不足时扩容
     void shrink(); //装填因子过小时压缩
-    bool bubble(Rank lo, Rank hi); //扫描交换
-    void bubbleSort(Rank lo, Rank hi); //起泡排序算法
+    void bubbleSort(Rank lo, Rank hi); //冒泡排序算法
     Rank maxItem(Rank lo, Rank hi); //选取最大元素
     void selectionSort(Rank lo, Rank hi); //选择排序算法
     void merge(Rank lo, Rank mi, Rank hi); //归并算法
@@ -180,7 +179,7 @@ Rank Vector<T>::insert(Rank r, const T &e) {
 
 template<typename T>
 int Vector<T>::remove(Rank lo, Rank hi) {
-    //这段代码写的很好
+    //这段代码写得很好
     if (hi == lo) return 0;
     while (hi < _size) _elem[lo++] = _elem[hi++];
     _size = lo;
@@ -276,6 +275,21 @@ Rank Vector<T>::search(const T &e, Rank lo, Rank hi) const {
     --lo;
     if (lo == hi - 1 && _elem[hi - 1] != e) lo = -1;
     return lo;
+}
+//TODO: 冒泡排序的优化？2.8.2
+template<typename T>
+void Vector<T>::bubbleSort(Rank lo, Rank hi) {
+    bool sorted = true;
+    hi--;
+    while(sorted){
+        for(int i = lo;i<hi;++i){
+            if(_elem[i]>_elem[i+1]){
+                std::swap(_elem[i],_elem[i+1]);
+                sorted = false;
+            }
+        }
+        hi--;
+    }
 }
 
 
