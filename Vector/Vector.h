@@ -276,20 +276,46 @@ Rank Vector<T>::search(const T &e, Rank lo, Rank hi) const {
     if (lo == hi - 1 && _elem[hi - 1] != e) lo = -1;
     return lo;
 }
+
 //TODO: 冒泡排序的优化？2.8.2
 template<typename T>
 void Vector<T>::bubbleSort(Rank lo, Rank hi) {
     bool sorted = true;
     hi--;
-    while(sorted){
-        for(int i = lo;i<hi;++i){
-            if(_elem[i]>_elem[i+1]){
-                std::swap(_elem[i],_elem[i+1]);
+    while (sorted) {
+        for (int i = lo; i < hi; ++i) {
+            if (_elem[i] > _elem[i + 1]) {
+                std::swap(_elem[i], _elem[i + 1]);
                 sorted = false;
             }
         }
         hi--;
     }
+}
+
+template<typename T>
+void Vector<T>::mergeSort(Rank lo, Rank hi) {
+    if (hi - lo < 2) return;
+    int mi = lo + (hi - lo) / 2;
+    mergeSort(lo, mi);
+    mergeSort(mi, hi);
+    merge(lo, mi, hi);
+}
+
+template<typename T>
+//有序向量（区间）的归并
+void Vector<T>::merge(Rank lo, Rank mi, Rank hi) { //[lo, mi)和[mi, hi)各自有序，lo < mi < hi
+    T *A = _elem + lo;
+    int lb = mi - lo;
+    T *B = new T[lb];
+    for (Rank i = 0; i < lb; ++i) B[i] = A[i++];
+    int lc = hi - mi;
+    T *C = _elem + mi;
+    for (Rank i = 0, j = 0, k = 0; j < lb || k < lc;) {
+        if (j < lb && (k >= lc || B[j] <= C[k])) A[i++] = B[j++];
+        if (k < lc && (j >= lb || C[k] < B[j])) A[i++] = C[k++];
+    }
+    delete[] B;
 }
 
 
