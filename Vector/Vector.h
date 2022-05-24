@@ -11,8 +11,8 @@ using Rank = int; //秩
 template<typename T>
 class Vector { //向量模板类
 protected:
-    Rank _size;
-    Rank _capacity;
+    Rank _size{};
+    Rank _capacity{};
     T *_elem; //规模、容量、数据区
     void copyFrom(T const *A, Rank lo, Rank hi); //复制数组区间A[lo, hi)
     void expand(); //空间不足时扩容
@@ -28,7 +28,22 @@ protected:
     void shellSort(Rank lo, Rank hi); //希尔排序算法
 public:
     // 构造函数
-    Vector(int c = DEFAULT_CAPACITY, Rank s = 0, T v = 0) //容量为c、规模为s、所有元素初始为v
+    /* 加上explicit就防止了隐式转换,例如如下的代码编译会不通过
+     * #include <iostream>
+     * using namespace std;
+     *
+     * class Point {
+     * public:
+     *   int x, y;
+     *  explicit Point(int x = 0, int y = 0)
+     *     : x(x), y(y) {}
+     *};
+     *int main()
+     *{
+     *    Point p = 1;
+     *}
+     */
+    explicit Vector(int c = DEFAULT_CAPACITY, Rank s = 0, T v = 0) //容量为c、规模为s、所有元素初始为v
     {
         _elem = new T[_capacity = c];
         for (_size = 0; _size < s; _elem[_size++] = v);
@@ -40,8 +55,9 @@ public:
     // 析构函数
     ~Vector() { delete[] _elem; } //释放内部空间
     // 只读访问接口
-    Rank size() const { return _size; } //规模
-    bool empty() const { return !_size; } //判空
+    //加上[[nodiscard]]，告诉编译器这个函数的返回值必须用，像new一样，不能忽略
+    [[nodiscard]] Rank size() const { return _size; } //规模
+    [[nodiscard]] bool empty() const { return !_size; } //判空
     Rank find(T const &e) const { return find(e, 0, _size); } //无序向量整体查找
     Rank find(T const &e, Rank lo, Rank hi) const; //无序向量区间查找
     Rank search(T const &e) const //有序向量整体查找
@@ -66,7 +82,7 @@ public:
     void traverse(void (* )(T &)); //遍历（使用函数指针，只读或局部性修改）
     template<typename VST>
     void traverse(VST &); //遍历（使用函数对象，可全局性修改）
-    int disordered() const; //返回向量中相邻但逆序的对数总数
+    [[nodiscard]] int disordered() const; //返回向量中相邻但逆序的对数总数
 };
 
 template<typename T>
@@ -316,6 +332,18 @@ void Vector<T>::merge(Rank lo, Rank mi, Rank hi) { //[lo, mi)和[mi, hi)各自�
         if (k < lc && (j >= lb || C[k] < B[j])) A[i++] = C[k++];
     }
     delete[] B;
+}
+
+template<typename T>
+void Vector<T>::sort(Rank lo, Rank hi) {
+    mergeSort(lo, hi);
+}
+
+template<typename T>
+Rank Vector<T>::maxItem(Rank lo, Rank hi) {
+    T res = _elem[lo];
+    while (++lo < hi) res = max(_elem[lo], res);
+    return res;
 }
 
 
