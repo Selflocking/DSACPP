@@ -205,7 +205,7 @@ int Vector<T>::remove(Rank lo, Rank hi) {
 
 template<typename T>
 T Vector<T>::remove(Rank r) {
-    T *t = _elem[r];
+    T t = _elem[r];
     remove(r, r + 1);
     return t;
 }
@@ -299,10 +299,11 @@ void Vector<T>::bubbleSort(Rank lo, Rank hi) {
     bool sorted = true;
     hi--;
     while (sorted) {
+        sorted = false;
         for (int i = lo; i < hi; ++i) {
             if (_elem[i] > _elem[i + 1]) {
                 std::swap(_elem[i], _elem[i + 1]);
-                sorted = false;
+                sorted = true;
             }
         }
         hi--;
@@ -324,7 +325,7 @@ void Vector<T>::merge(Rank lo, Rank mi, Rank hi) { //[lo, mi)和[mi, hi)各自�
     T *A = _elem + lo;
     int lb = mi - lo;
     T *B = new T[lb];
-    for (Rank i = 0; i < lb; ++i) B[i] = A[i++];
+    for (Rank i = 0; i < lb; ++i) B[i] = A[i];
     int lc = hi - mi;
     T *C = _elem + mi;
     for (Rank i = 0, j = 0, k = 0; j < lb || k < lc;) {
@@ -337,6 +338,7 @@ void Vector<T>::merge(Rank lo, Rank mi, Rank hi) { //[lo, mi)和[mi, hi)各自�
 template<typename T>
 void Vector<T>::sort(Rank lo, Rank hi) {
     mergeSort(lo, hi);
+//    bubbleSort(lo, hi);
 }
 
 template<typename T>
