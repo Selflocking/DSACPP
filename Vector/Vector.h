@@ -322,18 +322,44 @@ void Vector<T>::mergeSort(Rank lo, Rank hi) {
 template<typename T>
 //有序向量（区间）的归并
 void Vector<T>::merge(Rank lo, Rank mi, Rank hi) { //[lo, mi)和[mi, hi)各自有序，lo < mi < hi
+    //数组A，用来存结果
+    Rank i = 0;
     T *A = _elem + lo;
+    //数组B，用来存前半数组
+    Rank j = 0;
     int lb = mi - lo;
     T *B = new T[lb];
-    for (Rank i = 0; i < lb; ++i) B[i] = A[i];
+    for (Rank ii = 0; ii < lb; ++ii) B[ii] = A[ii];
+    //数组C，用来存后半数组
+    Rank k = 0;
     int lc = hi - mi;
     T *C = _elem + mi;
-    for (Rank i = 0, j = 0, k = 0; j < lb || k < lc;) {
-        if (j < lb && (k >= lc || B[j] <= C[k])) A[i++] = B[j++];
-        if (k < lc && (j >= lb || C[k] < B[j])) A[i++] = C[k++];
+    //合并
+    while (j < lb && k < lc) {
+        A[i++] = (B[j] <= C[k]) ? B[j++] : C[k++];
     }
+    while (j < lb) A[i++] = B[j++];
+    while (k < lc) A[i++] = C[k++];
     delete[] B;
 }
+
+/*//from oi-wiki
+template<typename T>
+void Vector<T>::merge(Rank lo, Rank mi, Rank hi) {
+    T *A = _elem;
+    T *pT = new T[_size];
+    int p = lo, q = mi, s = lo;
+    while (s < hi) {
+        if (p >= mi || (q < hi && A[p] > A[q])) {
+            pT[s++] = A[q++];
+            // ans += mid - p;
+        } else
+            pT[s++] = A[p++];
+    }
+    for (int i = lo; i < hi; ++i) A[i] = pT[i];
+    delete[]pT;
+}*/
+
 
 template<typename T>
 void Vector<T>::sort(Rank lo, Rank hi) {
