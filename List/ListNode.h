@@ -25,4 +25,23 @@ struct ListNode { //列表节点模板类（以双向链表形式实现）
     ListNodePosi<T> insertAsSucc(T const &e); //紧随当前节点之后插入新节点
 };
 
+template<typename T>
+ListNodePosi<T> ListNode<T>::insertAsPred(const T &e) {
+    //构建一个新节点.
+    auto t = new ListNode(e, pred, this);
+    //将此节点的前一个的后继设为t
+    pred->succ = t;
+    //将此节点的前指针指向t
+    pred = t;
+    return t;
+}
+
+template<typename T>
+ListNodePosi<T> ListNode<T>::insertAsSucc(const T &e) {
+    auto t = new ListNode(e, this, succ);
+    t->pred = this;
+    this->succ = t;
+    return t;
+}
+
 #endif //DSACPP_LISTNODE_H
