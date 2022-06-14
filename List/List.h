@@ -118,5 +118,70 @@ ListNodePosi<T> List<T>::insert(ListNodePosi<T> p, const T &e) {
     ++_size;
     return p->insertAsSucc(e);
 }
+
+template<typename T>
+void List<T>::copyNodes(ListNodePosi<T> p, int n) {
+    init();
+    while (n--) {
+        insertAsLast(p->data);
+        p = p->succ;
+    }
+}
+
+template<typename T>
+T List<T>::remove(ListNodePosi<T> p) {
+    T e = p->data;
+    p->pred->succ = p->succ;
+    p->succ->pred = p->pred;
+    delete p;
+    _size--;
+    return e;
+}
+
+template<typename T>
+List<T>::~List() {
+    clear();
+    delete header;
+    delete trailer;
+}
+
+template<typename T>
+int List<T>::clear() {
+    int oldSize = _size;
+    while (0 < _size) {
+        remove(header->succ);
+    }
+    return oldSize;
+}
+
+template<typename T>
+int List<T>::deduplicate() {
+    if (_size < 2) return 0;
+    int oldSize = _size;
+    ListNodePosi<T> p = first();
+    Rank r = 1;
+    while (p->succ != trailer) {
+        p = p->succ;
+        ListNodePosi<T> q = find(p->data, r, p);
+        if (q) remove(q);
+        else r++;
+    }
+    return oldSize - _size;
+}
+
+template<typename T>
+int List<T>::uniquify() {
+    if (_size < 2) return 0;
+    int oldSize = _size;
+    ListNodePosi<T> p = first();
+    ListNodePosi<T> temp;
+    T e = p->data;
+    while (p->succ != trailer) {
+        temp = p->succ;
+        if (temp->data != p->data) p = temp;
+        else remove(temp);
+    }
+    return oldSize - _size;
+}
 //List
 #endif //DSACPP_LIST_H
